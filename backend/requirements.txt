@@ -1,0 +1,22 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.9
+python-multipart>=0.0.9
+crewai>=1.15
+openai>=1.51
+google-generativeai>=0.8
+weasyprint>=62
+jinja2>=3.1
+gitpython>=3.1
+sse-starlette>=2.1
+python-dotenv>=1.0
+
+# Semgrep, Bandit, and pip-audit are invoked as external subprocesses (see
+# scanners/run_*.py), never imported in-process — so they are installed
+# separately rather than pinned here. This also sidesteps a real Windows-dev
+# issue: semgrep's sdist explicitly refuses to build on Windows, and pulling
+# it into the same resolver pass as crewai's large, tightly-pinned dependency
+# tree makes pip backtrack into old semgrep versions with no Windows wheel at
+# all. Install them with your platform's package manager, e.g.:
+#   pip install semgrep bandit pip-audit          (Linux/macOS/Railway/Render)
+#   pip install bandit pip-audit && choco/scoop install semgrep, or use WSL   (Windows dev)

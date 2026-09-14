@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>SentinelOS Security Report — {{ scan.scan_id }}</title>
+<style>
+  @page { size: A4; margin: 2.2cm 1.8cm; }
+  body { font-family: "Segoe UI", Helvetica, Arial, sans-serif; color: #1a1f2b; font-size: 10.5pt; }
+  h1 { font-size: 20pt; margin-bottom: 0.1em; }
+  h2 { font-size: 14pt; margin-top: 1.6em; border-bottom: 2px solid #1a1f2b; padding-bottom: 0.2em; }
+  h3 { font-size: 11.5pt; margin-top: 1.2em; margin-bottom: 0.3em; }
+  .meta { color: #555; font-size: 9pt; margin-bottom: 1.5em; }
+  .cover { text-align: center; margin-top: 4cm; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 8.5pt; font-weight: 600; color: #fff; }
+  .sev-critical { background: #8b0000; }
+  .sev-high { background: #d0342c; }
+  .sev-medium { background: #d98c00; }
+  .sev-low { background: #3a7d3a; }
+  .sev-info { background: #4a5568; }
+  table { width: 100%; border-collapse: collapse; margin: 0.6em 0; font-size: 9.5pt; }
+  th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; vertical-align: top; }
+  th { background: #f0f2f5; }
+  .finding-block { margin-bottom: 1.2em; page-break-inside: avoid; }
+  .diff { background: #f7f7f9; border: 1px solid #ddd; padding: 6px 8px; font-family: Consolas, monospace; font-size: 8.5pt; white-space: pre-wrap; }
+  ul { margin-top: 0.2em; }
+  .footer-note { color: #888; font-size: 8pt; margin-top: 3em; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>SentinelOS Security Report</h1>
+  <p class="meta">
+    Repository: {{ scan.repo_url or "uploaded archive" }}<br />
+    Scan ID: {{ scan.scan_id }}<br />
+    Generated: {{ generated_at }}
+  </p>
+</div>
+
+<h2>Executive Summary</h2>
+{% if scan.executive_summary %}
+<p>{{ scan.executive_summary.overview }}</p>
+<h3>Key Risks</h3>
+<ul>
+  {% for risk in scan.executive_summary.key_risks %}
+  <li>{{ risk }}</li>
+  {% endfor %}
+</ul>
+<h3>Remediation Roadmap</h3>
+<ul>
+  {% for item in scan.executive_summary.remediation_roadmap %}
+  <li>{{ item }}</li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>No executive summary was generated for this scan.</p>
+{% endif %}
+
+<h2>Risk Ranking</h2>
+<table>
+  <tr><th>#</th><th>File</th><th>Severity</th><th>Composite</th><th>Likelihood</th><th>Business Impact</th></tr>
+  {% for row in ranked_rows %}
+  <tr>
+    <td>{{ row.rank }}</td>
+    <td>{{ row.file_path }}</td>
+    <td><span class="badge sev-{{ row.severity }}">{{ row.severity }}</span></td>
+    <td>{{ row.composite_score }}</td>
+    <td>{{ row.likelihood }}</td>
+    <td>{{ row.business_impact }}</td>
+  </tr>
+  {% endfor %}
+</table>
+
+<h2>Technical Appendix</h2>
+{% for row in appendix_rows %}
+<div class="finding-block">
+  <h3>{{ row.rank }}. {{ row.finding.file_path }}:{{ row.finding.line_number }}
+    <span class="badge sev-{{ row.finding.severity.value }}">{{ row.finding.severity.value }}</span>
+  </h3>
+  <p><strong>Tool:</strong> {{ row.finding.tool }} ({{ row.finding.rule_id }})
+     {% if row.finding.cwe_id %} — {{ row.finding.cwe_id }}{% endif %}</p>
+  <p><strong>Description:</strong> {{ row.finding.description }}</p>
+
+  {% if row.analysis %}
+  <p><strong>Why this is exploitable:</strong> {{ row.analysis.exploitability_explanation }}</p>
+  <p><strong>Impact category:</strong> {{ row.analysis.impact_category.value }}</p>
+  {% endif %}
+
+  {% if row.chain %}
+  <p><strong>Simulated attack chain:</strong></p>
+  <ol>
+    {% for node in row.chain.nodes %}
+    <li>{{ node.label }} — {{ node.technique }}</li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+
+  {% if row.patch %}
+  <p><strong>Suggested patch:</strong> {{ row.patch.explanation }}</p>
+  <div class="diff">{{ row.patch.diff }}</div>
+  {% endif %}
+</div>
+{% endfor %}
+
+<p class="footer-note">Generated automatically by SentinelOS. Attack simulations are defensive
+write-ups for prioritization purposes only, not executable exploit instructions.</p>
+
+</body>
+</html>
