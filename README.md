@@ -73,9 +73,13 @@ WeasyPrint needs native Pango/Cairo/GDK-Pixbuf libraries. They install
 cleanly on Linux (Railway/Render build steps just need
 `apt-get install libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0
 libffi-dev`) and on macOS (`brew install pango`), but are not present on a
-bare Windows machine. Until installed, `GET /api/scan/{id}/report` returns a
-`503` with a clear message instead of crashing — every other feature
-(including the on-screen Executive Summary) works normally.
+bare Windows machine. `services/pdf_service.py` handles this automatically:
+if WeasyPrint's import fails, it falls back to shelling out to headless
+Chrome/Edge's built-in `--headless --print-to-pdf` (auto-detected from the
+usual install paths, `CHROME_PATH`, or `PATH`) — real PDF rendering via a
+real browser engine, not a stub. Only if neither WeasyPrint nor a Chromium
+browser is available does `GET /api/scan/{id}/report` return a `503` with a
+clear message instead of crashing.
 
 ## Frontend
 
